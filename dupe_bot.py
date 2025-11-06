@@ -11,7 +11,7 @@ import threading
 # ==============================
 # CONFIGURATION
 # ==============================
-BOT_TOKEN = os.getenv("TELEGRAM_TOKEN")
+BOT_TOKEN = os.getenv(8500936015:AAHmkreA99cbgRxpDDGiDBxprlNu5t7ZUTw)
 if not BOT_TOKEN:
     raise ValueError("❌ TELEGRAM_TOKEN environment variable is not set.")
 
@@ -183,4 +183,5 @@ threading.Thread(target=run_flask).start()
 # ==============================
 logging.info("🤖 Bot is starting...")
 bot.infinity_polling()
+
 
