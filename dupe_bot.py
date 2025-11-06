@@ -5,19 +5,18 @@ import re
 import logging
 from datetime import datetime, timedelta
 import telebot
+from flask import Flask
+import threading
 
 # ==============================
 # CONFIGURATION
 # ==============================
-BOT_TOKEN = os.getenv(8500936015:AAHmkreA99cbgRxpDDGiDBxprlNu5t7ZUTw)
+BOT_TOKEN = os.getenv("TELEGRAM_TOKEN")
 if not BOT_TOKEN:
     raise ValueError("❌ TELEGRAM_TOKEN environment variable is not set.")
 
-# Use a persistent folder for database
 DATA_DIR = "data"
 DB_PATH = os.path.join(DATA_DIR, "dupe_entries.db")
-
-# Make sure the folder exists
 os.makedirs(DATA_DIR, exist_ok=True)
 
 bot = telebot.TeleBot(BOT_TOKEN)
@@ -88,9 +87,6 @@ def detect_value_type(text):
     else:
         return (None, None)
 
-def is_recent(ts):
-    return datetime.now() - datetime.fromtimestamp(ts) < timedelta(hours=24)
-
 # ==============================
 # BOT HANDLERS
 # ==============================
@@ -102,8 +98,12 @@ def handle_start(message):
         "I'll tell you if it's already in the database or recently added."
     )
 
-@bot.message_handler(func=lambda m: True)
+@bot.message_handler(func=lambda m: True, content_types=['text'])
 def handle_input(message):
+    # Ignore messages from channels
+    if message.chat.type == "channel":
+        return
+
     raw = message.text.strip()
     user = message.from_user
     chat_id = message.chat.id
@@ -165,23 +165,22 @@ def handle_input(message):
     logging.info(f"Added: {raw} by {user.username}")
 
 # ==============================
-# RUN BOT
+# FLASK PING FOR UPTIMEROBOT
 # ==============================
-logging.info("🤖 Bot is starting...")
-bot.infinity_polling()
-
-from flask import Flask
-import threading
-
 app = Flask(__name__)
 
 @app.route("/")
 def home():
     return "Bot is running!"
 
-# Run Flask in a separate thread
 def run_flask():
     app.run(host="0.0.0.0", port=10000)
 
-import threading
 threading.Thread(target=run_flask).start()
+
+# ==============================
+# RUN BOT
+# ==============================
+logging.info("🤖 Bot is starting...")
+bot.infinity_polling()
+
